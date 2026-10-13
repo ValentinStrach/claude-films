@@ -16,12 +16,12 @@ const ROOT = filmDir(process.argv[2]);
 const PORT = Number(process.argv[3] || 8765);
 const HOME = '/' + (process.argv[4] || 'core/anim/index.html');
 const MIME = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json',
-  '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.mp4': 'video/mp4',
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.css': 'text/css',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.mp4': 'video/mp4',
   '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.bin': 'application/octet-stream',
 };
 
-http.createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
     if (!isLocalRequest(req, PORT)) { res.writeHead(403); return res.end(); }
@@ -41,9 +41,14 @@ http.createServer(async (req, res) => {
     const type = MIME[path.extname(f)] || 'application/octet-stream';
     // Requêtes partielles : indispensables pour pouvoir se déplacer dans l'audio.
     const range = /bytes=(\d*)-(\d*)/.exec(req.headers.range || '');
-    if (range) {
-      const start = range[1] ? Number(range[1]) : 0;
-      const end = range[2] ? Math.min(Number(range[2]), data.length - 1) : data.length - 1;
+    if (range && (range[1] || range[2])) {
+      // bytes=a-b, bytes=a- (jusqu'à la fin) ou bytes=-n (les n derniers octets).
+      const start = range[1] ? Number(range[1]) : Math.max(0, data.length - Number(range[2]));
+      const end = range[1] && range[2] ? Math.min(Number(range[2]), data.length - 1) : data.length - 1;
+      if (start >= data.length || start > end) {
+        res.writeHead(416, { 'Content-Range': `bytes */${data.length}` });
+        return res.end();
+      }
       res.writeHead(206, { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${start}-${end}/${data.length}`, 'Content-Length': end - start + 1 });
       return res.end(data.subarray(start, end + 1));
     }
@@ -53,4 +58,9 @@ http.createServer(async (req, res) => {
     res.writeHead(404);
     res.end();
   }
-}).listen(PORT, '127.0.0.1', () => console.log(`http://localhost:${PORT}/`));
+});
+server.on('error', (e) => {
+  console.error(e.code === 'EADDRINUSE' ? `le port ${PORT} est déjà utilisé : en choisir un autre, par exemple node core/render/serve.mjs ${process.argv[2]} ${PORT + 1}` : e.message);
+  process.exit(1);
+});
+server.listen(PORT, '127.0.0.1', () => console.log(`http://127.0.0.1:${PORT}/`));

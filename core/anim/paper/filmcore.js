@@ -109,6 +109,7 @@ function chapterSign(ctx, text, lt) {
 // ---------- Montage ----------
 // load(ASSETS), optionnel : données propres au film (traces, photos), chargées avant les preload des scènes.
 export function createFilm(scenes, { duration, load }) {
+  if (!scenes.length) throw new Error('aucune scène à monter (avec --page only, préciser --query scenes=<module>)');
   let RESOLVED = [];
   const resolve = () => {
     RESOLVED = scenes.map((s) => ({ ...s, t0: at(s.from), t1: at(s.to) })).sort((a, b) => a.t0 - b.t0);

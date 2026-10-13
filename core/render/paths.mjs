@@ -1,5 +1,6 @@
 // Chemins communs aux scripts de rendu : dossier du dépôt, dossier d'un film, navigateur.
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,7 +31,7 @@ export function isLocalRequest(req, port) {
   return ok(req.headers.host) && (!origin || ok(origin.replace(/^http:\/\//, '')));
 }
 
-// Chrome (ou Chromium, ou Edge sous Windows) : variable CHROME, sinon emplacements habituels.
+// Chrome (ou Chromium, ou Edge) : variable CHROME, sinon emplacements habituels, sinon le PATH.
 export function findChrome() {
   if (process.env.CHROME) return process.env.CHROME;
   const env = (k) => process.env[k] || '';
@@ -38,6 +39,8 @@ export function findChrome() {
     darwin: [
       '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
       '/Applications/Chromium.app/Contents/MacOS/Chromium',
+      path.join(os.homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'),
+      '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
     ],
     win32: [
       path.join(env('PROGRAMFILES'), 'Google/Chrome/Application/chrome.exe'),
@@ -46,8 +49,10 @@ export function findChrome() {
       path.join(env('PROGRAMFILES(X86)'), 'Microsoft/Edge/Application/msedge.exe'),
       path.join(env('PROGRAMFILES'), 'Microsoft/Edge/Application/msedge.exe'),
     ],
-    linux: ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium'],
+    linux: ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium', '/usr/bin/microsoft-edge'],
   }[process.platform] || [];
+  const names = process.platform === 'win32' ? ['chrome.exe', 'msedge.exe'] : ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'microsoft-edge'];
+  for (const dir of (process.env.PATH || '').split(path.delimiter).filter(Boolean)) for (const n of names) candidates.push(path.join(dir, n));
   const found = candidates.find((p) => fs.existsSync(p));
   if (!found) throw new Error('Chrome introuvable : installer Google Chrome ou indiquer son chemin dans la variable CHROME');
   return found;

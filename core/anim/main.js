@@ -9,9 +9,17 @@ const params = new URLSearchParams(location.search);
 const renderMode = params.has('render');
 // ?page=nom charge anim/pages/nom.js (galeries de test) au lieu du film.
 const page = params.get('page');
-const { drawFrame, preload, DURATION, AUDIO = '/audio/song.mp3' } = await import(page ? `/anim/pages/${page}.js` : '/anim/film.js');
-
-await preload();
+// Un film qui ne se charge pas (module introuvable, erreur dans preload) le signale dans window.__error :
+// render.mjs s'arrête aussitôt avec ce message au lieu d'attendre __ready.
+let film;
+try {
+  film = await import(page ? `/anim/pages/${page}.js` : '/anim/film.js');
+  await film.preload();
+} catch (e) {
+  window.__error = String(e?.stack || e);
+  throw e;
+}
+const { drawFrame, DURATION, AUDIO = '/audio/song.mp3' } = film;
 window.__duration = DURATION;
 window.renderFrame = (t) => drawFrame(ctx, t);
 window.__capture = (t, fmt = 'jpeg', q = 0.95) => {
