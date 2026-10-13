@@ -16,17 +16,21 @@ Le film d'exemple, « Le petit bateau de papier » (41 s), montre le kit papier 
 - **Python 3.10+** avec numpy, scipy, Pillow (`requirements.txt`), par exemple avec [uv](https://docs.astral.sh/uv/) :
 
 ```bash
-uv venv .venv && uv pip install -p .venv -r requirements.txt
+uv venv .venv
 ```
 
-Sous Windows, l'interpréteur est `.venv\Scripts\python` au lieu de `.venv/bin/python` ; les commandes `node` sont identiques dans PowerShell.
+```bash
+uv pip install -p .venv -r requirements.txt
+```
+
+`uv run python` lance l'interpréteur de `.venv` sous macOS, Linux et Windows : toutes les commandes de ce README marchent telles quelles dans PowerShell.
 
 Les polices du kit papier sont des polices système, macOS d'abord (Arial Rounded MT Bold, Marker Felt) avec repli sur Segoe UI / Segoe Print sous Windows et DejaVu Sans sous Linux : le rendu est proche mais pas identique d'un système à l'autre.
 
 ## Essayer avec le film d'exemple
 
 ```bash
-.venv/bin/python films/exemple/audio/compose.py
+uv run python films/exemple/audio/compose.py
 ```
 
 ```bash
@@ -67,7 +71,11 @@ ffmpeg -i films/mon-film/audio/song.mp3 -ar 44100 films/mon-film/audio/song.wav
 ```
 
 ```bash
-.venv/bin/python core/analysis/analyze.py mon-film && .venv/bin/python films/mon-film/analysis/repet.py
+uv run python core/analysis/analyze.py mon-film
+```
+
+```bash
+uv run python films/mon-film/analysis/repet.py
 ```
 
 ```bash
@@ -75,7 +83,7 @@ node core/render/serve.mjs mon-film 8765 anim/tapper.html
 ```
 
 ```bash
-.venv/bin/python films/mon-film/analysis/timing.py
+uv run python films/mon-film/analysis/timing.py
 ```
 
 3. Écrire les scènes dans `anim/scenes/` (une scène = `{ id, from, to, draw }`, voir `films/exemple/anim/scenes/`), vérifier image par image :
