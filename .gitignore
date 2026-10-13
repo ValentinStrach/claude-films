@@ -1,6 +1,8 @@
 # Système et environnements
 .DS_Store
 Thumbs.db
+.env
+.claude/settings.local.json
 .venv/
 __pycache__/
 
