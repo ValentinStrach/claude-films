@@ -16,7 +16,7 @@ node core/analysis/grid_timing.mjs exemple --bpm 100 --beats 8 --start 4.8 --dur
 ```
 
 ```bash
-.venv/bin/python films/exemple/audio/compose.py
+uv run python films/exemple/audio/compose.py
 ```
 
 ```bash
