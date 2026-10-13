@@ -39,7 +39,7 @@
       Ligne pas chantée : <kbd>S</kbd>. Pause : <kbd>P</kbd>. Tout recommencer : <kbd>R</kbd>.
       Si une ligne est chantée deux fois, tape seulement la première.
       À la fin (ou quand la chanson se termine), tout est enregistré dans <code>analysis/taps.json</code> ;
-      relance ensuite <code>python3 analysis/timing.py</code>.
+      relance ensuite <code>uv run python films/&lt;film&gt;/analysis/timing.py</code>.
     </div>
     <div class="stage">
       <div class="section" id="section"></div>
@@ -55,7 +55,8 @@
     import { LINES } from '/anim/lyrics.js';
     const $ = (id) => document.getElementById(id);
     const WHO = { solo: 'Solo', choir: 'Chœur', all: 'Tout le monde' };
-    const KEY = 'taps';
+    // Une clé par film (empreinte des paroles) : deux films calés sur le même port ne se mélangent pas.
+    const KEY = 'taps:' + [...LINES.map((l) => l.text).join('\n')].reduce((h, c) => (Math.imul(h, 31) + c.codePointAt(0)) >>> 0, 7).toString(36);
     const audio = new Audio('/audio/song.mp3');
     let taps = [];
     try { taps = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch {}
@@ -159,7 +160,7 @@
       render();
     });
     audio.addEventListener('ended', finish);
-    setInterval(() => { $('time').textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration || 212)}`; }, 200);
+    setInterval(() => { $('time').textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration || 0)}`; }, 200);
     render();
   </script>
 </body>

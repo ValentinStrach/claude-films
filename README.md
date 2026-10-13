@@ -11,7 +11,7 @@ Le film d'exemple, « Le petit bateau de papier » (41 s), montre le kit papier 
 ## Prérequis
 
 - **Google Chrome** (ou Chromium ; sous Windows, Edge convient aussi). Il est cherché aux emplacements habituels ; sinon indiquer son chemin dans la variable `CHROME`.
-- **Node.js 22+** (WebSocket et fetch natifs : aucune dépendance npm)
+- **Node.js 22.7+** (WebSocket et fetch natifs, modules ES détectés automatiquement : aucune dépendance npm)
 - **ffmpeg** et ffprobe dans le `PATH`
 - **Python 3.10+** avec numpy, scipy, Pillow (`requirements.txt`), par exemple avec [uv](https://docs.astral.sh/uv/) :
 
@@ -57,7 +57,7 @@ cp -R templates/clip-papier films/mon-film
 
 Un film peut aussi vivre hors du dépôt (par exemple dans un dépôt privé) : passer son chemin au lieu de son nom, `node core/render/render.mjs ../mes-films/mon-film --stills 2`.
 
-2. Écrire le texte ou les paroles dans `anim/lyrics.js`, puis le minutage :
+2. Modèle `clip-papier` (pour `libre`, passer à l'étape 3 : `anim/film.js` dessine directement en fonction du temps) : écrire le texte ou les paroles dans `anim/lyrics.js`, puis le minutage :
    - sans voix chantée (musique composée en code, ou en attendant la chanson), sur une grille de tempo :
 
 ```bash
