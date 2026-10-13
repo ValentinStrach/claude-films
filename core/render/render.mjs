@@ -13,6 +13,7 @@
 // window.__capture(t, format, qualité) qui dessine l'instant t et renvoie un data URL.
 import { spawn } from 'node:child_process';
 import http from 'node:http';
+import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -61,21 +62,42 @@ function serve() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Chrome choisit lui-même son port DevTools (0) et l'écrit dans DevToolsActivePort : pas de collision
+// avec un autre Chrome. stop() l'arrête et supprime son profil temporaire, y compris après une erreur.
 async function launchChrome() {
   const userDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'claude-films-chrome-'));
-  const port = 9300 + Math.floor(Math.random() * 600);
   const proc = spawn(CHROME, [
-    '--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${userDir}`,
+    '--headless=new', '--remote-debugging-port=0', `--user-data-dir=${userDir}`,
     '--no-first-run', '--no-default-browser-check', '--hide-scrollbars', '--mute-audio',
     '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
     '--disable-backgrounding-occluded-windows', '--force-device-scale-factor=1', 'about:blank',
   ], { stdio: 'ignore' });
+  let failed = null;
+  proc.on('error', (e) => { failed = e; });
+  const running = () => proc.pid !== undefined && proc.exitCode === null && proc.signalCode === null;
+  const stop = async () => {
+    if (running()) {
+      const exited = new Promise((r) => proc.once('exit', r));
+      proc.kill();
+      await Promise.race([exited, sleep(3000)]);
+    }
+    await fsp.rm(userDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }).catch(() => {});
+  };
+  // Filet de sécurité si Node s'arrête sur une erreur imprévue : pas de Chrome orphelin ni de profil oublié.
+  process.on('exit', () => {
+    if (running()) proc.kill();
+    try { fs.rmSync(userDir, { recursive: true, force: true }); } catch {}
+  });
   let wsUrl;
-  for (let i = 0; i < 150 && !wsUrl; i++) {
-    try { wsUrl = (await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()).webSocketDebuggerUrl; }
-    catch { await sleep(100); }
+  for (let i = 0; i < 150 && !wsUrl && !failed && proc.exitCode === null; i++) {
+    const [port, wsPath] = (await fsp.readFile(path.join(userDir, 'DevToolsActivePort'), 'utf8').catch(() => '')).split('\n');
+    if (wsPath?.startsWith('/devtools/')) wsUrl = `ws://127.0.0.1:${port}${wsPath.trim()}`;
+    else await sleep(100);
   }
-  if (!wsUrl) throw new Error('Chrome DevTools injoignable');
+  if (!wsUrl) {
+    await stop();
+    throw new Error(failed ? `impossible de lancer ${CHROME} : ${failed.message}` : `Chrome ne répond pas (${CHROME})`);
+  }
   const ws = new WebSocket(wsUrl);
   await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
   const pending = new Map();
@@ -99,7 +121,7 @@ async function launchChrome() {
     pending.set(i, { resolve, reject });
     ws.send(JSON.stringify({ id: i, method, params, sessionId }));
   });
-  return { proc, ws, send };
+  return { send, stop };
 }
 
 async function openPage(cdp, url) {
@@ -141,11 +163,19 @@ async function renderRange(page, from, to, a, outFile, label) {
     '-c:v', a.format === 'png' ? 'png' : 'mjpeg', '-i', '-',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', String(a.crf), '-pix_fmt', 'yuv420p', outFile,
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
-  const done = new Promise((res, rej) => ff.on('close', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg a échoué (${c})`)))));
+  const done = new Promise((res, rej) => {
+    ff.on('error', (e) => rej(new Error(`impossible de lancer ffmpeg : ${e.message}`)));
+    ff.on('close', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg a échoué (${c})`))));
+  });
+  // Si ffmpeg s'arrête, l'erreur remonte par done : on cesse d'écrire au lieu d'attendre un drain qui ne viendra pas.
+  let failed = null;
+  done.catch((e) => { failed = e; });
+  ff.stdin.on('error', () => {});
   const t0 = Date.now();
   for (let f = from; f < to; f++) {
+    if (failed) throw failed;
     const buf = decode(await page.capture(f / a.fps, a.format, a.quality));
-    if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
+    if (!ff.stdin.write(buf)) await Promise.race([new Promise((r) => ff.stdin.once('drain', r)), done]);
     if ((f - from) % 150 === 149) {
       const fps = (f - from + 1) / ((Date.now() - t0) / 1000);
       console.log(`${label} image ${f + 1 - from}/${to - from} (${fps.toFixed(1)} img/s)`);
@@ -158,8 +188,9 @@ async function renderRange(page, from, to, a, outFile, label) {
 const a = parseArgs(process.argv);
 const srv = await serve();
 const url = `http://127.0.0.1:${srv.address().port}/core/anim/index.html?render=1${a.page ? `&page=${encodeURIComponent(a.page)}` : ''}${a.query ? `&${a.query}` : ''}`;
-const cdp = await launchChrome();
+let cdp = null;
 try {
+  cdp = await launchChrome();
   if (a.stills) {
     const page = await openPage(cdp, url);
     await fsp.mkdir(path.join(ROOT, 'out/stills'), { recursive: true });
@@ -190,9 +221,11 @@ try {
       return renderRange(p, s, e, a, seg, `[w${i}]`);
     }));
     const list = path.join(segDir, 'list.txt');
-    await fsp.writeFile(list, segs.filter(Boolean).map((s) => `file '${s.replaceAll('\\', '/')}'`).join('\n'));
+    // Noms relatifs au dossier de list.txt : aucun chemin à échapper (apostrophes, antislashs de Windows).
+    await fsp.writeFile(list, segs.filter(Boolean).map((s) => `file '${path.basename(s)}'`).join('\n'));
     const out = path.resolve(ROOT, a.out);
     await new Promise((res, rej) => spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', out], { stdio: 'inherit' })
+      .on('error', (e) => rej(new Error(`impossible de lancer ffmpeg : ${e.message}`)))
       .on('close', (c) => (c === 0 ? res() : rej(new Error('concat a échoué')))));
     console.log(`${out} (${f1 - f0} images en ${((Date.now() - t0) / 1000).toFixed(0)} s)`);
   }
@@ -201,8 +234,8 @@ try {
   process.exitCode = 1;
 } finally {
   // Sortie immédiate : sinon la fermeture de la WebSocket attend Chrome ~60 s.
-  cdp.proc.kill();
   srv.closeAllConnections();
   srv.close();
+  await cdp?.stop();
   process.exit(process.exitCode ?? 0);
 }
