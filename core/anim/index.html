@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Aperçu du film</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #111; overflow: hidden; }
+    canvas { display: block; }
+    body:not(.render) canvas { position: absolute; top: 50%; left: 50%; transform-origin: 0 0; }
+    #hud { position: fixed; left: 12px; bottom: 10px; color: #eee; font: 14px -apple-system, "Segoe UI", sans-serif; opacity: 0.8; }
+    body.render #hud { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div id="hud">Espace : lecture/pause · ← → : ±5 s</div>
+  <script type="module" src="/core/anim/main.js"></script>
+</body>
+</html>

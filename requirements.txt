@@ -1,0 +1,4 @@
+# Analyse audio (core/analysis, analysis/ des films) et musique composée en code (films/exemple/audio).
+numpy>=2.0
+scipy>=1.13
+pillow>=10.0

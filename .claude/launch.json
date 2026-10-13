@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "exemple", "runtimeExecutable": "node", "runtimeArgs": ["core/render/serve.mjs", "exemple", "8765"], "port": 8765 }
+  ]
+}

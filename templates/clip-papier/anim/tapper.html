@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Calage des paroles</title>
+  <style>
+    :root { --bg: #17120e; --ink: #f5ecdc; --dim: rgba(245,236,220,0.45); --hi: #ffd23f; --ok: #6fcf7f; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Arial Rounded MT Bold", -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 900px; margin: 0 auto; padding: 28px 16px; display: flex; flex-direction: column; gap: 18px; }
+    h1 { margin: 0; font-size: 22px; letter-spacing: 0.02em; }
+    .help { color: var(--dim); font-family: -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.5; }
+    kbd { background: #2b231c; border: 1px solid #4a3d31; border-radius: 5px; padding: 1px 7px; color: var(--ink); font-size: 13px; }
+    .stage { min-height: 300px; display: flex; flex-direction: column; justify-content: center; gap: 14px; text-align: center; }
+    .section { color: var(--dim); font-size: 16px; text-transform: uppercase; letter-spacing: 0.12em; }
+    .who { color: var(--hi); opacity: 0.8; }
+    .prev { color: var(--dim); font-size: 18px; min-height: 24px; }
+    .cur { color: var(--hi); font-size: clamp(26px, 5vw, 44px); line-height: 1.2; min-height: 110px; display: flex; align-items: center; justify-content: center; }
+    .next { color: var(--ink); opacity: 0.6; font-size: 22px; min-height: 30px; }
+    .bar { height: 8px; background: #2b231c; border-radius: 4px; overflow: hidden; }
+    .bar > div { height: 100%; width: 0; background: var(--hi); transition: width 0.2s; }
+    .row { display: flex; justify-content: space-between; color: var(--dim); font-size: 15px; font-family: -apple-system, "Segoe UI", sans-serif; }
+    button { font: inherit; font-size: 20px; padding: 14px 22px; border-radius: 12px; border: 0; background: var(--hi); color: #1d160f; cursor: pointer; }
+    .done { color: var(--ok); font-size: 26px; }
+    ol { margin: 0; padding: 0; list-style: none; font-family: -apple-system, "Segoe UI", sans-serif; font-size: 14px; max-height: 40vh; overflow-y: auto; border-top: 1px solid #2b231c; }
+    li { display: grid; grid-template-columns: 56px 150px 1fr; gap: 10px; padding: 4px 6px; color: var(--dim); }
+    li.sec { margin-top: 8px; color: var(--ink); opacity: 0.8; font-weight: bold; display: block; }
+    li.on { background: #2b231c; color: var(--hi); border-radius: 6px; }
+    li.tapped { color: var(--ink); }
+    li .t { font-variant-numeric: tabular-nums; }
+    @media (max-width: 560px) { li { grid-template-columns: 56px 1fr; } li .w { display: none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Calage des paroles</h1>
+    <div class="help">
+      Appuie sur <kbd>Espace</kbd> pile quand la voix <b>attaque</b> la ligne en jaune.
+      Raté ? <kbd>⌫</kbd> annule la dernière et recule un peu.
+      Ligne pas chantée : <kbd>S</kbd>. Pause : <kbd>P</kbd>. Tout recommencer : <kbd>R</kbd>.
+      Si une ligne est chantée deux fois, tape seulement la première.
+      À la fin (ou quand la chanson se termine), tout est enregistré dans <code>analysis/taps.json</code> ;
+      relance ensuite <code>python3 analysis/timing.py</code>.
+    </div>
+    <div class="stage">
+      <div class="section" id="section"></div>
+      <div class="prev" id="prev"></div>
+      <div class="cur" id="cur"><button id="start">▶ Lancer la chanson</button></div>
+      <div class="next" id="next"></div>
+    </div>
+    <div class="bar"><div id="bar"></div></div>
+    <div class="row"><span id="count"></span><span id="time">0:00</span></div>
+    <ol id="list"></ol>
+  </main>
+  <script type="module">
+    import { LINES } from '/anim/lyrics.js';
+    const $ = (id) => document.getElementById(id);
+    const WHO = { solo: 'Solo', choir: 'Chœur', all: 'Tout le monde' };
+    const KEY = 'taps';
+    const audio = new Audio('/audio/song.mp3');
+    let taps = [];
+    try { taps = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch {}
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(taps)); } catch {} };
+    const fmt = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+    const fmtMs = (t) => `${fmt(t)}.${String(Math.floor((t % 1) * 10))}`;
+    let started = false, finished = false;
+
+    // Liste complète des lignes à taper, avec l'appui enregistré pour chacune.
+    const items = [];
+    let lastSec = null;
+    for (const l of LINES) {
+      if (l.section !== lastSec) {
+        const h = document.createElement('li');
+        h.className = 'sec';
+        h.textContent = l.label;
+        $('list').appendChild(h);
+        lastSec = l.section;
+      }
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="t"></span><span class="w"></span><span class="x"></span>';
+      li.querySelector('.w').textContent = WHO[l.who] || l.who;
+      li.querySelector('.x').textContent = l.text;
+      $('list').appendChild(li);
+      items.push(li);
+    }
+
+    function render() {
+      const i = taps.length;
+      $('count').textContent = `${Math.min(i, LINES.length)} / ${LINES.length}`;
+      $('bar').style.width = `${(100 * i) / LINES.length}%`;
+      items.forEach((li, k) => {
+        const tp = taps[k];
+        li.querySelector('.t').textContent = tp ? (tp.t == null ? 'passée' : fmtMs(tp.t)) : '';
+        li.classList.toggle('tapped', !!tp);
+        li.classList.toggle('on', k === i);
+      });
+      items[Math.min(i, items.length - 1)]?.scrollIntoView({ block: 'nearest' });
+      const last = taps.length ? taps[taps.length - 1] : null;
+      $('prev').textContent = last ? `${LINES[i - 1].text}  ·  ${last.t == null ? 'passée' : fmt(last.t)}` : '';
+      if (!started) return;
+      if (i >= LINES.length) {
+        $('section').textContent = '';
+        $('cur').innerHTML = finished ? '<span class="done">Merci, c\'est enregistré dans analysis/taps.json</span>' : '';
+        $('next').textContent = '';
+        return;
+      }
+      $('section').innerHTML = `${LINES[i].label} · <span class="who">${WHO[LINES[i].who] || LINES[i].who}</span>`;
+      $('cur').textContent = LINES[i].text;
+      $('next').textContent = LINES[i + 1] ? LINES[i + 1].text : '';
+    }
+
+    async function finish() {
+      if (finished) return;
+      finished = true;
+      audio.pause();
+      // t : instant de l'appui ; skipped : ligne signalée non chantée (S) ; t null sans skipped : pas atteinte.
+      const lines = LINES.map((l, k) => ({ section: l.section, index: l.index, who: l.who, text: l.text, t: taps[k]?.t ?? null, ...(taps[k]?.skipped ? { skipped: true } : {}) }));
+      try {
+        const r = await fetch('/save/taps.json', { method: 'POST', body: JSON.stringify({ created: new Date().toISOString(), lines }, null, 1) });
+        if (!r.ok) throw new Error(r.status);
+      } catch (e) {
+        $('cur').innerHTML = `<span>Échec de l'enregistrement (${e.message}) : la page est-elle servie par node core/render/serve.mjs <film> ?</span>`;
+        finished = false;
+        return;
+      }
+      render();
+    }
+
+    $('start').addEventListener('click', () => {
+      started = true;
+      if (taps.length) audio.currentTime = Math.max(0, (taps[taps.length - 1].t ?? 0) - 2);
+      audio.play();
+      render();
+    });
+
+    addEventListener('keydown', (e) => {
+      if (e.code === 'KeyR' && confirm('Effacer tous les appuis et recommencer ?')) {
+        taps = []; save(); finished = false;
+        audio.currentTime = 0;
+        if (started) audio.play();
+        render();
+        return;
+      }
+      if (!started || finished) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (taps.length < LINES.length) { taps.push({ t: Math.round(audio.currentTime * 1000) / 1000 }); save(); }
+        if (taps.length >= LINES.length) finish();
+      } else if (e.code === 'KeyS') {
+        taps.push({ t: null, skipped: true }); save();
+        if (taps.length >= LINES.length) finish();
+      } else if (e.code === 'Backspace') {
+        e.preventDefault();
+        taps.pop(); save();
+        const back = [...taps].reverse().find((x) => x.t != null);
+        audio.currentTime = Math.max(0, (back ? back.t : 0) - 1);
+      } else if (e.code === 'KeyP') {
+        audio.paused ? audio.play() : audio.pause();
+      }
+      render();
+    });
+    audio.addEventListener('ended', finish);
+    setInterval(() => { $('time').textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration || 212)}`; }, 200);
+    render();
+  </script>
+</body>
+</html>

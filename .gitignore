@@ -1,0 +1,38 @@
+# Système et environnements
+.DS_Store
+Thumbs.db
+.venv/
+__pycache__/
+
+# Films : seul le film d'exemple est versionné (les autres restent locaux ou dans leur propre dépôt)
+/films/*
+!/films/exemple/
+
+# Rendus (images de test, segments, vidéos)
+out/
+
+# Médias : jamais dans Git (photos, vidéos, sons, sources graphiques)
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.svg
+*.ai
+*.psd
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.m4a
+# Seule exception : l'aperçu du film d'exemple affiché dans le README
+!/docs/exemple.mp4
+
+# Polices
+*.ttf
+*.otf
+*.woff
+*.woff2
+
+# Analyses audio intermédiaires, régénérées depuis audio/song.wav
+*.npz
