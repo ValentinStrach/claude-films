@@ -13,5 +13,8 @@ const out = path.resolve(ROOT, process.argv[3] || `out/${path.basename(ROOT)}.mp
 
 const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-i', path.join(ROOT, 'audio/song.mp3'),
   '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', out], { stdio: 'inherit' });
-if (r.status !== 0) process.exit(r.status);
+if (r.error || r.status !== 0) {
+  console.error(r.error ? `impossible de lancer ffmpeg : ${r.error.message}` : 'ffmpeg a échoué');
+  process.exit(r.status || 1);
+}
 console.log(out);

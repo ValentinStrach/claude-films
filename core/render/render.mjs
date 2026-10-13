@@ -31,14 +31,27 @@ const MIME = {
   '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.bin': 'application/octet-stream',
 };
 
+// Options en --clé valeur ou --clé=valeur ; une option inconnue ou sans valeur arrête tout de suite.
 function parseArgs(argv) {
   const a = { fps: 30, workers: 1, from: 0, to: null, out: 'out/render.mp4', stills: null, format: 'jpeg', quality: 0.95, crf: 17 };
+  const NUM = ['fps', 'workers', 'from', 'to', 'quality', 'crf'];
+  const STR = ['out', 'format', 'page', 'query'];
+  const fail = (msg) => {
+    console.error(`${msg}\noptions : --stills t1,t2 | --page nom | --query clé=valeur | --from s | --to s | --out fichier.mp4 | --workers n | --fps n | --crf n | --format jpeg|png | --quality 0..1`);
+    process.exit(1);
+  };
   for (let i = 3; i < argv.length; i++) {
-    const k = argv[i].replace(/^--/, '');
-    const v = argv[i + 1];
-    if (k === 'stills') { a.stills = v.split(',').map(Number); i++; }
-    else if (['fps', 'workers', 'from', 'to', 'quality', 'crf'].includes(k)) { a[k] = Number(v); i++; }
-    else if (['out', 'format', 'page', 'query'].includes(k)) { a[k] = v; i++; }
+    let [k, v] = argv[i].startsWith('--') ? argv[i].slice(2).split(/=(.*)/s) : [];
+    if (!k || ![...NUM, ...STR, 'stills'].includes(k)) fail(`option inconnue : ${argv[i]}`);
+    if (v === undefined) v = argv[++i];
+    if (v === undefined || v.startsWith('--')) fail(`valeur manquante pour --${k}`);
+    if (k === 'stills') {
+      a.stills = v.split(',').filter(Boolean).map(Number);
+      if (!a.stills.length || a.stills.some(Number.isNaN)) fail('--stills attend des instants séparés par des virgules, par exemple --stills 3,12.5');
+    } else if (NUM.includes(k)) {
+      a[k] = Number(v);
+      if (Number.isNaN(a[k])) fail(`--${k} attend un nombre`);
+    } else a[k] = v;
   }
   return a;
 }
@@ -150,6 +163,8 @@ async function openPage(cdp, url) {
   };
   for (let i = 0; i < 300; i++) {
     if (await evaluate('window.__ready === true', 1000).catch(() => false)) return { evaluate, capture };
+    const err = await evaluate('window.__error ?? null', 1000).catch(() => null);
+    if (err) throw new Error(`le film ne se charge pas :\n${err}`);
     await sleep(100);
   }
   throw new Error('La page ne signale jamais __ready');
@@ -224,6 +239,7 @@ try {
     // Noms relatifs au dossier de list.txt : aucun chemin à échapper (apostrophes, antislashs de Windows).
     await fsp.writeFile(list, segs.filter(Boolean).map((s) => `file '${path.basename(s)}'`).join('\n'));
     const out = path.resolve(ROOT, a.out);
+    await fsp.mkdir(path.dirname(out), { recursive: true });
     await new Promise((res, rej) => spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', out], { stdio: 'inherit' })
       .on('error', (e) => rej(new Error(`impossible de lancer ffmpeg : ${e.message}`)))
       .on('close', (c) => (c === 0 ? res() : rej(new Error('concat a échoué')))));
