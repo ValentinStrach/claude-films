@@ -29,7 +29,7 @@ macOS, Windows et Linux : navigateur trouvé par `findChrome()` (variable `CHROM
 
 ## Médias et Git
 
-- Jamais dans Git : images, vidéos, sons, polices, `.npz`, `out/`, et tout `films/*` sauf `films/exemple/` (voir `.gitignore`). Seule exception : `docs/exemple.mp4` (aperçu 720p du README, environ 4 Mo), à refaire quand le film d'exemple change (commande dans `films/exemple/README.md`).
+- Jamais dans Git : images, vidéos, sons, polices, `.npz`, `out/`, et tout `films/*` sauf `films/exemple/` (voir `.gitignore`). Seules exceptions : `docs/exemple.mp4` (aperçu 720p du README, environ 4 Mo) et `docs/exemple.jpg` (image fixe cliquable du README, GitHub ne lisant pas les mp4 du dépôt en ligne), à refaire quand le film d'exemple change (commandes dans `films/exemple/README.md`).
 - Python : `.venv` créé avec `uv` (`requirements.txt`).
 
 ## Conventions

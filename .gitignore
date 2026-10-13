@@ -25,8 +25,9 @@ out/
 *.mp3
 *.wav
 *.m4a
-# Seule exception : l'aperçu du film d'exemple affiché dans le README
+# Seules exceptions : l'aperçu du film d'exemple affiché dans le README et son image fixe
 !/docs/exemple.mp4
+!/docs/exemple.jpg
 
 # Polices
 *.ttf

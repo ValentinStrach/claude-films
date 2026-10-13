@@ -31,8 +31,12 @@ node core/render/render.mjs exemple --out out/film_video.mp4 --workers 8
 node films/exemple/render/mux.mjs
 ```
 
-Aperçu du README (720p, environ 4 Mo) :
+Aperçu du README (720p, environ 4 Mo) et son image fixe (le titre, à 3,3 s) :
 
 ```bash
 ffmpeg -y -i films/exemple/out/exemple.mp4 -vf scale=1280:720 -c:v libx264 -preset slow -crf 27 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart docs/exemple.mp4
+```
+
+```bash
+ffmpeg -y -ss 3.3 -i docs/exemple.mp4 -frames:v 1 -q:v 4 docs/exemple.jpg
 ```

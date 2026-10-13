@@ -2,7 +2,9 @@
 
 Films d'animation **entièrement faits en code** : Canvas 2D dessiné image par image dans Chrome sans écran, assemblé avec ffmpeg. Pas de logiciel de montage, pas de caméra. Le dépôt contient le framework (`core/`), deux modèles pour démarrer un film (`templates/`) et un film d'exemple (`films/exemple/`), pensés pour être écrits avec Claude Code (voir `CLAUDE.md`).
 
-![Le petit bateau de papier, le film d'exemple](docs/exemple.mp4)
+[![Le petit bateau de papier, le film d'exemple](docs/exemple.jpg)](docs/exemple.mp4)
+
+*Cliquer sur l'image pour voir le film (mp4, 720p, 41 s).*
 
 Le film d'exemple, « Le petit bateau de papier » (41 s), montre le kit papier découpé : pièces découpées aux ciseaux, mer à plusieurs plans avec écume, ciels en dégradé et halos, titre qui tombe mot par mot, karaoké, panneaux de chapitre, transitions, éclairs et tonnerre calés sur le tempo, caméra qui tremble. Sa musique (marimba, nappes, basse, percussions, réverbération) est synthétisée en Python : il se rend entièrement depuis un clone.
 
@@ -106,7 +108,7 @@ node core/render/share.mjs films/mon-film/out/mon-film.mp4
 | `core/analysis/` | `analyze.py` (tempo, battements, activité vocale), `plot.py` (vue d'ensemble pour caler les sections), `grid_timing.mjs` (minutage sur grille de tempo) |
 | `templates/` | `clip-papier/` (scènes, paroles, calage, analyse de la voix, montage du son), `libre/` |
 | `films/exemple/` | le film d'exemple : `anim/` (film, scènes, décors, texte, minutage), `audio/compose.py`, `render/mux.mjs` |
-| `docs/exemple.mp4` | aperçu du film d'exemple affiché en haut de ce README (seul média versionné) |
+| `docs/` | `exemple.mp4` (aperçu du film d'exemple, 720p) et `exemple.jpg` (son image fixe en haut de ce README) : les seuls médias versionnés |
 
 Le serveur de rendu sert `/core/...` depuis le dépôt et tout le reste depuis le dossier du film : dans un film, on importe le framework par `/core/anim/...` et ses propres fichiers par `/anim/...` ou en relatif.
 
