@@ -25,7 +25,7 @@ Tous les films en dépendent. Avant de toucher `core/`, rendre des images de ré
 
 ## Plateformes
 
-macOS, Windows et Linux : navigateur trouvé par `findChrome()` (variable `CHROME`, sinon Chrome, Chromium ou Edge), chemins construits avec `path`, `os.devNull` plutôt que `/dev/null`, barres obliques dans les listes de concaténation ffmpeg. Toute nouvelle commande documentée doit marcher sous Windows (PowerShell) aussi.
+macOS, Windows et Linux : navigateur trouvé par `findChrome()` (variable `CHROME`, sinon Chrome, Chromium ou Edge), chemins construits avec `path`, `os.devNull` plutôt que `/dev/null`, noms relatifs dans la liste de concaténation ffmpeg (aucun chemin à échapper), `encoding="utf-8"` sur toute lecture ou écriture de texte en Python (sinon cp1252 sous Windows). `render.mjs` arrête toujours Chrome et supprime son profil temporaire, même après une erreur. Toute nouvelle commande documentée doit marcher sous Windows (PowerShell) aussi.
 
 ## Médias et Git
 
