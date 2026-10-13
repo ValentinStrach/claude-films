@@ -29,7 +29,7 @@ LINE_MAX = 4.2
 
 
 def load_lyrics():
-    src = (ROOT / "anim/lyrics.js").read_text()
+    src = (ROOT / "anim/lyrics.js").read_text(encoding="utf-8")
     sections = []
     for m in re.finditer(r"\{ id: '(\w+)', label: '([^']*)', lines: \[(.*?)\] \}", src, re.S):
         lines = re.findall(r"""\{ who: '(\w+)', text: (['"])((?:\\.|(?!\2).)*)\2 \}""", m.group(3))
@@ -103,7 +103,7 @@ def main():
 
     sections = load_lyrics()
     taps_path = ROOT / "analysis/taps.json"
-    taps = json.loads(taps_path.read_text())["lines"] if taps_path.exists() else None
+    taps = json.loads(taps_path.read_text(encoding="utf-8"))["lines"] if taps_path.exists() else None
     tapped, skipped = {}, set()
     for tp in taps or []:
         key = (tp["section"], tp["index"])
@@ -198,7 +198,7 @@ def main():
         "mouth": [round(float(m), 3) for m in mouth],
     }
     js = "// Généré par analysis/timing.py : ne pas modifier à la main.\nexport const TIMING = " + json.dumps(data, ensure_ascii=False) + ";\n"
-    (ROOT / "anim/timing.js").write_text(js)
+    (ROOT / "anim/timing.js").write_text(js, encoding="utf-8")
     print(f"source={source} lignes={len(out_lines)} bpm={data['bpm']} durée={data['duration']}")
     for sid, s in sec.items():
         print(f"  {sid:6s} {s['start']:7.2f} -> {s['end']:7.2f}")

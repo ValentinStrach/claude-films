@@ -21,7 +21,7 @@ beats = f["beats"]
 starts = []
 tj = ROOT / "anim/timing.js"
 if tj.exists():
-    s = tj.read_text()
+    s = tj.read_text(encoding="utf-8")
     starts = [l["start"] for l in json.loads(s[s.index("{"):s.rstrip().rindex(";")])["lines"]]
 
 t0, t1, out = float(sys.argv[1]), float(sys.argv[2]), sys.argv[3]
