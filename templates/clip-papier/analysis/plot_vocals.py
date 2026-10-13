@@ -63,5 +63,6 @@ for r in range(rows):
         d.line([(x, y0), (x, y0 + 8)], fill=(0, 90, 255), width=1)
         d.text((x + 2, cy + CURVE_H + 2), f"{int(s)}", fill=(0, 0, 0))
         s += 1
+(ROOT / out).parent.mkdir(parents=True, exist_ok=True)
 img.save(ROOT / out)
 print(ROOT / out)

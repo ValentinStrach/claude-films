@@ -22,10 +22,24 @@ SR, HOP, NFFT = 22050, 256, 2048
 OFFSETS = [-28, -20, -12, -4, 4, 12, 20, 28]  # en temps : ±1, 3, 5, 7 mesures
 
 
+def read_wav(path):
+    """WAV en flottants dans [-1, 1], toujours en stéréo (un WAV mono est dupliqué), quel que soit l'encodage."""
+    sr, x = wavfile.read(path)
+    if x.dtype.kind == "i":
+        x = x.astype(np.float32) / float(np.iinfo(x.dtype).max + 1)
+    elif x.dtype.kind == "u":
+        x = (x.astype(np.float32) - 128) / 128
+    else:
+        x = x.astype(np.float32)
+    if x.ndim == 1:
+        x = np.stack([x, x], axis=1)
+    return sr, x
+
+
 def main():
     beats = np.load(ROOT / "analysis/features.npz")["beats"]
-    sr, x = wavfile.read(ROOT / "audio/song.wav")
-    x = resample_poly(x.astype(np.float32) / 32768.0, SR, sr, axis=0)
+    sr, x = read_wav(ROOT / "audio/song.wav")
+    x = resample_poly(x, SR, sr, axis=0)
     mid = x.mean(axis=1)
     freqs, _, Z = stft(mid, fs=SR, nperseg=NFFT, noverlap=NFFT - HOP)
     X = np.abs(Z).astype(np.float32)

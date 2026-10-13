@@ -54,5 +54,6 @@ for r in range(rows):
         d.line([(x, y0), (x, cy + CURVE_H)], fill=(120, 170, 255) if s % 5 else (0, 90, 255), width=1)
         if s % 1 == 0:
             d.text((x + 2, cy + CURVE_H + 2), str(s), fill=(0, 0, 0))
+(ROOT / out).parent.mkdir(parents=True, exist_ok=True)
 img.save(ROOT / out)
 print(ROOT / out)

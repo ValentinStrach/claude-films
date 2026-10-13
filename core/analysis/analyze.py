@@ -19,9 +19,22 @@ HOP = 220          # ~10 ms
 NFFT = 1024
 
 
+def read_wav(path):
+    """WAV en flottants dans [-1, 1], toujours en stéréo (un WAV mono est dupliqué), quel que soit l'encodage."""
+    sr, x = wavfile.read(path)
+    if x.dtype.kind == "i":
+        x = x.astype(np.float32) / float(np.iinfo(x.dtype).max + 1)
+    elif x.dtype.kind == "u":
+        x = (x.astype(np.float32) - 128) / 128
+    else:
+        x = x.astype(np.float32)
+    if x.ndim == 1:
+        x = np.stack([x, x], axis=1)
+    return sr, x
+
+
 def load():
-    sr, x = wavfile.read(ROOT / "audio/song.wav")
-    x = x.astype(np.float32) / 32768.0
+    sr, x = read_wav(ROOT / "audio/song.wav")
     x = resample_poly(x, SR, sr, axis=0)
     return x[:, 0], x[:, 1]
 
@@ -38,7 +51,7 @@ def hpss(mag):
     return mag * mask, mag * (1 - mask)
 
 
-def tempo_and_beats(onset, fps, bpm_prior=118.0):
+def tempo_and_beats(onset, fps, bpm_prior=120.0):
     o = onset - onset.mean()
     ac = np.correlate(o, o, mode="full")[len(o) - 1:]
     lags = np.arange(len(ac))

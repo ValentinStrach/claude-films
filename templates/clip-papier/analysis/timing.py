@@ -21,9 +21,9 @@ FPS_FILM = 30
 # Estimation : index (dans features.npz) du temps où commence la première ligne de chaque section.
 SECTION_BEATS = {"intro": 0, "c1": 16}
 BEATS_PER_LINE = 8
-# Exceptions à la grille, en temps depuis le début de la section : {("v1", 7): 54}.
+# Exceptions à la grille, en temps depuis le début de la section : {("c1", 1): 10}.
 LINE_BEATS = {}
-# Lignes parlées, hors grille : {("out", 0): (début, fin)} en secondes.
+# Lignes parlées, hors grille : {("intro", 0): (début, fin)} en secondes.
 FIXED = {}
 LINE_MAX = 4.2
 
@@ -31,7 +31,7 @@ LINE_MAX = 4.2
 def load_lyrics():
     src = (ROOT / "anim/lyrics.js").read_text(encoding="utf-8")
     sections = []
-    for m in re.finditer(r"\{ id: '(\w+)', label: '([^']*)', lines: \[(.*?)\] \}", src, re.S):
+    for m in re.finditer(r"""\{ id: '(\w+)', label: (['"])(?:\\.|(?!\2).)*\2, lines: \[(.*?)\] \}""", src, re.S):
         lines = re.findall(r"""\{ who: '(\w+)', text: (['"])((?:\\.|(?!\2).)*)\2 \}""", m.group(3))
         sections.append((m.group(1), [(l[2].replace("\\'", "'"), l[0]) for l in lines]))
     return sections
