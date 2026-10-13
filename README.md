@@ -2,9 +2,9 @@
 
 Films d'animation **entièrement faits en code** : Canvas 2D dessiné image par image dans Chrome sans écran, assemblé avec ffmpeg. Pas de logiciel de montage, pas de caméra. Le dépôt contient le framework (`core/`), deux modèles pour démarrer un film (`templates/`) et un film d'exemple (`films/exemple/`), pensés pour être écrits avec Claude Code (voir `CLAUDE.md`).
 
-[![Le petit bateau de papier, le film d'exemple](docs/exemple.jpg)](docs/exemple.mp4)
+[![Le petit bateau de papier, le film d'exemple](docs/exemple.jpg)](https://cdn.jsdelivr.net/gh/ValentinStrach/claude-films@main/docs/exemple.mp4)
 
-*Cliquer sur l'image pour voir le film (mp4, 720p, 41 s).*
+*Cliquer sur l'image pour voir le film (mp4, 720p, 41 s, lu depuis `docs/exemple.mp4` via le CDN jsDelivr : GitHub sert ses fichiers bruts en téléchargement).*
 
 Le film d'exemple, « Le petit bateau de papier » (41 s), montre le kit papier découpé : pièces découpées aux ciseaux, mer à plusieurs plans avec écume, ciels en dégradé et halos, titre qui tombe mot par mot, karaoké, panneaux de chapitre, transitions, éclairs et tonnerre calés sur le tempo, caméra qui tremble. Sa musique (marimba, nappes, basse, percussions, réverbération) est synthétisée en Python : il se rend entièrement depuis un clone.
 
