@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Petit serveur local pour l'aperçu d'un film (core/anim/index.html) et son outil de calage (anim/tapper.html).
 // /core/... est servi depuis le framework, le reste depuis le dossier du film.
-// POST /save/<nom>.json enregistre le corps dans <film>/analysis/<nom>.json.
+// POST /save/<nom>.json enregistre le corps dans <film>/analysis/<nom>.json (JSON seulement, depuis ce serveur seulement).
 import http from 'node:http';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { REPO, filmDir } from './paths.mjs';
+import { filmDir, staticFile, isLocalRequest } from './paths.mjs';
 
 // node core/render/serve.mjs <film> [port] [page servie à la racine] ; <film> : nom ou chemin, comme render.mjs.
 if (!process.argv[2]) {
@@ -24,8 +24,10 @@ const MIME = {
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
+    if (!isLocalRequest(req, PORT)) { res.writeHead(403); return res.end(); }
     if (req.method === 'POST' && url.pathname.startsWith('/save/')) {
-      const name = path.basename(url.pathname).replace(/[^\w.-]/g, '');
+      const name = url.pathname.slice('/save/'.length);
+      if (!/^[\w-]+\.json$/.test(name)) { res.writeHead(400); return res.end(); }
       const chunks = [];
       for await (const c of req) chunks.push(c);
       await fsp.writeFile(path.join(ROOT, 'analysis', name), Buffer.concat(chunks));
@@ -33,9 +35,8 @@ http.createServer(async (req, res) => {
       return res.end('{"ok":true}');
     }
     const p = url.pathname === '/' ? HOME : decodeURIComponent(url.pathname);
-    const base = p.startsWith('/core/') ? REPO : ROOT;
-    const f = path.join(base, p);
-    if (!f.startsWith(base + path.sep)) { res.writeHead(403); return res.end(); }
+    const f = staticFile(ROOT, p);
+    if (!f) { res.writeHead(403); return res.end(); }
     const data = await fsp.readFile(f);
     const type = MIME[path.extname(f)] || 'application/octet-stream';
     // Requêtes partielles : indispensables pour pouvoir se déplacer dans l'audio.

@@ -104,7 +104,7 @@ node core/render/share.mjs films/mon-film/out/mon-film.mp4
 |---|---|
 | `core/anim/` | `index.html` + `main.js` (page du film : mode rendu ou aperçu avec le son), `engine.js` (dimensions 1920×1080, maths, easing, hasard déterministe, bruit) |
 | `core/anim/paper/` | kit papier découpé : `paper.js` (pièces, grain, ombres, formes), `text.js` (stickers, karaoké), `timeline.js` (minutage : lignes, mots, battements, bouche), `filmcore.js` (montage : transitions, karaoké, panneaux de chapitre) |
-| `core/render/` | `render.mjs` (rendu headless parallèle → mp4), `serve.mjs` (aperçu et calage), `share.mjs` (version < 30 Mio), `paths.mjs` (dossier d'un film, recherche de Chrome) |
+| `core/render/` | `render.mjs` (rendu headless parallèle → mp4), `serve.mjs` (aperçu et calage), `share.mjs` (version < 30 Mio), `paths.mjs` (dossier d'un film, fichiers servis et requêtes acceptées, recherche de Chrome) |
 | `core/analysis/` | `analyze.py` (tempo, battements, activité vocale), `plot.py` (vue d'ensemble pour caler les sections), `grid_timing.mjs` (minutage sur grille de tempo) |
 | `templates/` | `clip-papier/` (scènes, paroles, calage, analyse de la voix, montage du son), `libre/` |
 | `films/exemple/` | le film d'exemple : `anim/` (film, scènes, décors, texte, minutage), `audio/compose.py`, `render/mux.mjs` |

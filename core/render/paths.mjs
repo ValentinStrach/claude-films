@@ -13,6 +13,23 @@ export function filmDir(arg) {
   return dir;
 }
 
+// Fichier servi pour un chemin d'URL : /core/... dans le dossier core/ du dépôt, le reste dans le
+// dossier du film. Renvoie null si le chemin sort de ce dossier (.., %2f encodés...).
+export function staticFile(film, urlPath) {
+  const inCore = urlPath.startsWith('/core/');
+  const base = inCore ? path.join(REPO, 'core') : film;
+  const f = path.join(base, inCore ? urlPath.slice('/core'.length) : urlPath);
+  return f.startsWith(base + path.sep) ? f : null;
+}
+
+// Seules les requêtes adressées à ce serveur local sont acceptées : un en-tête Host étranger
+// (DNS rebinding) ou un Origin étranger (page web qui envoie une requête) est refusé.
+export function isLocalRequest(req, port) {
+  const ok = (h) => h === `127.0.0.1:${port}` || h === `localhost:${port}`;
+  const origin = req.headers.origin;
+  return ok(req.headers.host) && (!origin || ok(origin.replace(/^http:\/\//, '')));
+}
+
 // Chrome (ou Chromium, ou Edge sous Windows) : variable CHROME, sinon emplacements habituels.
 export function findChrome() {
   if (process.env.CHROME) return process.env.CHROME;

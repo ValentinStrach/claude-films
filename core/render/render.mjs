@@ -16,7 +16,7 @@ import http from 'node:http';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { REPO, filmDir, findChrome } from './paths.mjs';
+import { filmDir, findChrome, staticFile, isLocalRequest } from './paths.mjs';
 
 if (!process.argv[2] || process.argv[2].startsWith('--')) {
   console.error('usage : node core/render/render.mjs <film> [options]');
@@ -46,11 +46,8 @@ function serve() {
   return new Promise((resolve) => {
     const srv = http.createServer(async (req, res) => {
       try {
-        const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-        // /core/... vient du framework, le reste du dossier du film.
-        const base = p.startsWith('/core/') ? REPO : ROOT;
-        const f = path.join(base, p);
-        if (!f.startsWith(base + path.sep)) { res.writeHead(403); return res.end(); }
+        const f = staticFile(ROOT, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+        if (!f || !isLocalRequest(req, srv.address().port)) { res.writeHead(403); return res.end(); }
         const data = await fsp.readFile(f);
         res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
         res.end(data);
