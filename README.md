@@ -51,6 +51,10 @@ Le film est dans `films/exemple/out/exemple.mp4`. L'aperçu du README (`docs/exe
 
 1. Copier un modèle : `templates/clip-papier` (clip sur une chanson ou un texte : papier découpé, karaoké, panneaux de chapitre), `templates/narration` (vidéo commentée en motion design : voix off synthétisée en local ou enregistrée, musique composée, extraction d'une présentation PowerPoint ; étapes dans son `README.md`) ou `templates/libre` (Canvas libre).
 
+   Le film de démo du modèle `narration` (40 s, rendu depuis son script et ses scènes d'exemple) :
+
+   [![Démo du modèle narration](docs/narration.jpg)](https://cdn.jsdelivr.net/gh/ValentinStrach/claude-films@main/docs/narration.mp4)
+
 ```bash
 cp -R templates/clip-papier films/mon-film
 ```
@@ -116,7 +120,7 @@ node core/render/share.mjs films/mon-film/out/mon-film.mp4
 | `core/analysis/` | `analyze.py` (tempo, battements, activité vocale), `plot.py` (vue d'ensemble pour caler les sections), `grid_timing.mjs` (minutage sur grille de tempo) |
 | `templates/` | `clip-papier/` (scènes, paroles, calage, analyse de la voix, montage du son), `narration/` (voix off Piper ou enregistrée, minutage sur la voix, musique, mix, montage avec génériques, extraction PowerPoint), `libre/` |
 | `films/exemple/` | le film d'exemple : `anim/` (film, scènes, décors, texte, minutage), `audio/compose.py`, `render/mux.mjs` |
-| `docs/` | `exemple.mp4` (aperçu du film d'exemple, 720p) et `exemple.jpg` (son image fixe en haut de ce README) : les seuls médias versionnés |
+| `docs/` | `exemple.mp4` (aperçu du film d'exemple, 720p) et `exemple.jpg` (son image fixe en haut de ce README), `narration.mp4` et `narration.jpg` (démo du modèle narration) : les seuls médias versionnés |
 
 Le serveur de rendu sert `/core/...` depuis le dépôt et tout le reste depuis le dossier du film : dans un film, on importe le framework par `/core/anim/...` et ses propres fichiers par `/anim/...` ou en relatif.
 
