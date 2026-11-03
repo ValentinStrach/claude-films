@@ -38,6 +38,8 @@ voices/
 # Seules exceptions : l'aperçu du film d'exemple affiché dans le README et son image fixe
 !/docs/exemple.mp4
 !/docs/exemple.jpg
+!/docs/narration.mp4
+!/docs/narration.jpg
 
 # Polices
 *.ttf
