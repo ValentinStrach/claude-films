@@ -1,0 +1,27 @@
+{
+  "voices": {"F": {"model": "voices/fr_FR-siwis-medium.onnx"}, "H": {"model": "voices/fr_FR-tom-medium.onnx"}},
+  "say": {"FAQ": "F.A.Q."},
+  "timing": {"lead": 0.4, "gap": 0.3, "tail": 0.7},
+  "scenes": [
+    {"id": "titre", "lead": 1.0, "tail": 1.0, "music": "title", "lines": [
+      {"v": "H", "text": "Une vidéo explicative, entièrement écrite en code."}
+    ]},
+    {"id": "ch1", "lead": 0.8, "tail": 1.0, "music": "panel", "lines": [
+      {"v": "F", "text": "Première partie : le principe."}
+    ]},
+    {"id": "script", "tail": 1.5, "music": "body", "lines": [
+      {"v": "F", "text": "Tout part d'un script : les répliques, la voix qui les dit, les pauses."},
+      {"v": "F", "text": "Chaque réplique est synthétisée une seule fois, puis gardée en cache."},
+      {"v": "F", "text": "Et le minutage du film se déduit de la voix."}
+    ]},
+    {"id": "etapes", "tail": 1.8, "lines": [
+      {"v": "H", "text": "Trois étapes suivent :"},
+      {"v": "H", "text": "la voix off,"},
+      {"v": "H", "text": "la musique, composée en code,"},
+      {"v": "H", "text": "et le mixage, qui baisse la musique quand la voix parle."}
+    ]},
+    {"id": "conclusion", "lead": 0.6, "tail": 3.0, "music": "end", "lines": [
+      {"v": "F", "text": "Une phrase change ? Seule cette réplique est refaite, et tout le film se recale."}
+    ]}
+  ]
+}

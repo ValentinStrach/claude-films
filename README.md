@@ -1,6 +1,6 @@
 # claude-films
 
-Films d'animation **entièrement faits en code** : Canvas 2D dessiné image par image dans Chrome sans écran, assemblé avec ffmpeg. Pas de logiciel de montage, pas de caméra. Le dépôt contient le framework (`core/`), deux modèles pour démarrer un film (`templates/`) et un film d'exemple (`films/exemple/`), pensés pour être écrits avec Claude Code (voir `CLAUDE.md`).
+Films d'animation **entièrement faits en code** : Canvas 2D dessiné image par image dans Chrome sans écran, assemblé avec ffmpeg. Pas de logiciel de montage, pas de caméra. Le dépôt contient le framework (`core/`), trois modèles pour démarrer un film (`templates/`) et un film d'exemple (`films/exemple/`), pensés pour être écrits avec Claude Code (voir `CLAUDE.md`).
 
 [![Le petit bateau de papier, le film d'exemple](docs/exemple.jpg)](https://cdn.jsdelivr.net/gh/ValentinStrach/claude-films@main/docs/exemple.mp4)
 
@@ -49,7 +49,7 @@ Le film est dans `films/exemple/out/exemple.mp4`. L'aperçu du README (`docs/exe
 
 ## Faire un nouveau film
 
-1. Copier un modèle : `templates/clip-papier` (clip sur une chanson ou un texte : papier découpé, karaoké, panneaux de chapitre) ou `templates/libre` (Canvas libre).
+1. Copier un modèle : `templates/clip-papier` (clip sur une chanson ou un texte : papier découpé, karaoké, panneaux de chapitre), `templates/narration` (vidéo commentée en motion design : voix off synthétisée en local ou enregistrée, musique composée, extraction d'une présentation PowerPoint ; étapes dans son `README.md`) ou `templates/libre` (Canvas libre).
 
 ```bash
 cp -R templates/clip-papier films/mon-film
@@ -57,7 +57,7 @@ cp -R templates/clip-papier films/mon-film
 
 Un film peut aussi vivre hors du dépôt (par exemple dans un dépôt privé) : passer son chemin au lieu de son nom, `node core/render/render.mjs ../mes-films/mon-film --stills 2`.
 
-2. Modèle `clip-papier` (pour `libre`, passer à l'étape 3 : `anim/film.js` dessine directement en fonction du temps) : écrire le texte ou les paroles dans `anim/lyrics.js`, puis le minutage :
+2. Modèle `clip-papier` (pour `libre`, passer à l'étape 3 : `anim/film.js` dessine directement en fonction du temps ; pour `narration`, suivre son `README.md`) : écrire le texte ou les paroles dans `anim/lyrics.js`, puis le minutage :
    - sans voix chantée (musique composée en code, ou en attendant la chanson), sur une grille de tempo :
 
 ```bash
@@ -114,7 +114,7 @@ node core/render/share.mjs films/mon-film/out/mon-film.mp4
 | `core/anim/paper/` | kit papier découpé : `paper.js` (pièces, grain, ombres, formes), `text.js` (stickers, karaoké), `timeline.js` (minutage : lignes, mots, battements, bouche), `filmcore.js` (montage : transitions, karaoké, panneaux de chapitre) |
 | `core/render/` | `render.mjs` (rendu headless parallèle → mp4), `serve.mjs` (aperçu et calage), `share.mjs` (version < 30 Mio), `paths.mjs` (dossier d'un film, fichiers servis et requêtes acceptées, recherche de Chrome) |
 | `core/analysis/` | `analyze.py` (tempo, battements, activité vocale), `plot.py` (vue d'ensemble pour caler les sections), `grid_timing.mjs` (minutage sur grille de tempo) |
-| `templates/` | `clip-papier/` (scènes, paroles, calage, analyse de la voix, montage du son), `libre/` |
+| `templates/` | `clip-papier/` (scènes, paroles, calage, analyse de la voix, montage du son), `narration/` (voix off Piper ou enregistrée, minutage sur la voix, musique, mix, montage avec génériques, extraction PowerPoint), `libre/` |
 | `films/exemple/` | le film d'exemple : `anim/` (film, scènes, décors, texte, minutage), `audio/compose.py`, `render/mux.mjs` |
 | `docs/` | `exemple.mp4` (aperçu du film d'exemple, 720p) et `exemple.jpg` (son image fixe en haut de ce README) : les seuls médias versionnés |
 

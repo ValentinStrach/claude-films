@@ -27,6 +27,14 @@ out/
 *.mp3
 *.wav
 *.m4a
+*.flac
+*.ogg
+*.pptx
+*.pdf
+# Sources d'un film (présentation, slides extraites) et modèles de voix Piper
+source/
+voices/
+*.onnx
 # Seules exceptions : l'aperçu du film d'exemple affiché dans le README et son image fixe
 !/docs/exemple.mp4
 !/docs/exemple.jpg
